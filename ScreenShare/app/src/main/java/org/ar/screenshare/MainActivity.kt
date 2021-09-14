@@ -36,33 +36,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        checkPermission()
         rtcEngine.enableVideo()
         rtcEngine.setExternalVideoSource(true,true,true)
         rtcEngine.setVideoEncoderConfiguration(
             VideoEncoderConfiguration(
-                VideoEncoderConfiguration.VD_1280x720,
-                VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24,
-                VideoEncoderConfiguration.COMPATIBLE_BITRATE,
-                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT)
+                VideoEncoderConfiguration.VD_1280x720)
         )
 
     }
-
-    private fun checkPermission(){
-        val permissions = arrayOf(
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.FOREGROUND_SERVICE
-        )
-        permissions.forEach {
-            val isOk = ActivityCompat.checkSelfPermission(this,it)
-            if (isOk != PackageManager.PERMISSION_GRANTED){
-                ActivityCompat.requestPermissions(this, permissions, 1)
-            }
-        }
-
-    }
-
 
     fun onClick(view: View) {
         when(view.id){
