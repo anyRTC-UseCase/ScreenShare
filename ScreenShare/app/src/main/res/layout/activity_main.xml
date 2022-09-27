@@ -19,7 +19,6 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:gravity="center"
-            android:onClick="onClick"
             android:layout_height="wrap_content"
             android:drawableTop="@drawable/select_join"
             android:text="加入频道">

@@ -15,15 +15,14 @@ import android.view.TextureView
 import android.view.View
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import kotlinx.android.synthetic.main.activity_main.*
 import org.ar.rtc.Constants
 import org.ar.rtc.IRtcEngineEventHandler
 import org.ar.rtc.RtcEngine
 import org.ar.rtc.VideoEncoderConfiguration
 import org.ar.rtc.video.ARVideoFrame
 import org.ar.rtc.video.VideoCanvas
+import org.ar.screenshare.databinding.ActivityMainBinding
 import org.loka.screensharekit.ScreenShareKit
-import org.loka.screensharekit.callback.H264CallBack
 import java.nio.ByteBuffer
 
 class MainActivity : AppCompatActivity() {
@@ -32,42 +31,36 @@ class MainActivity : AppCompatActivity() {
     private var isJoinChannel = false
     private var isJoinSuccess = false
     private val rtcEngine by lazy { RtcEngine.create(this,Config.appId,RtcEvent()) }
-
+    private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
         rtcEngine.enableVideo()
         rtcEngine.setExternalVideoSource(true,true,true)
-        rtcEngine.setVideoEncoderConfiguration(
-            VideoEncoderConfiguration(
-                VideoEncoderConfiguration.VD_1280x720)
-        )
 
-    }
-
-    fun onClick(view: View) {
-        when(view.id){
-            R.id.tv_join->{
+        binding.run {
+            tvJoin.setOnClickListener({
                 if (isJoinChannel){
                     ScreenShareKit.stop()
                     rtcEngine.leaveChannel()
                     isJoinSuccess =false
-                    tv_join.text = "加入频道"
-                    tv_join.isSelected = false
+                    tvJoin.text = "加入频道"
+                    tvJoin.isSelected = false
                 }else{
                     requestCapture()//打开屏幕录制
-                    tv_join.text = "离开频道"
-                    tv_join.isSelected = true
+                    tvJoin.text = "离开频道"
+                    tvJoin.isSelected = true
                     rtcEngine.joinChannel("","12345","","")
                 }
                 isJoinChannel = !isJoinChannel
-            }
+            })
         }
     }
 
 
+
     private fun requestCapture() {
-       ScreenShareKit.init(this).onH264({ buffer, isKeyFrame, ts ->
+       ScreenShareKit.init(this).onH264({ buffer, isKeyFrame, w, h, ts ->
            if (isJoinSuccess) {
                rtcEngine.pushExternalVideoFrame(ARVideoFrame().apply {
                    val array = ByteArray(buffer.remaining())
@@ -76,8 +69,8 @@ class MainActivity : AppCompatActivity() {
                    format = if (isKeyFrame){ARVideoFrame.FORMAT_VIDEO_KEY_FRAME}else{ARVideoFrame.FORMAT_VIDEO_NOR_FRAME}
                    timeStamp = ts
                    buf = array
-                   height = Resources.getSystem().displayMetrics.heightPixels
-                   stride = Resources.getSystem().displayMetrics.widthPixels
+                   height = h
+                   stride = w
                })
            }
        }).start()
@@ -93,6 +86,9 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
+
+
 
     override fun onDestroy() {
         super.onDestroy()
