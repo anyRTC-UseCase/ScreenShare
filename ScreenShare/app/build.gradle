@@ -42,6 +42,6 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
 
     implementation 'io.anyrtc:rtc:4.2.2.7'
-    implementation 'com.github.LxzBUG:ScreenShare:1.0.2'
+    implementation 'com.github.LxzBUG:ScreenShare:1.0.3'
 
 }

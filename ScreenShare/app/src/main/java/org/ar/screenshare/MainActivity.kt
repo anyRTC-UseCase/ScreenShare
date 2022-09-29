@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.media.projection.MediaProjectionManager
 import android.os.Build
@@ -50,7 +51,7 @@ class MainActivity : AppCompatActivity() {
                     requestCapture()//打开屏幕录制
                     tvJoin.text = "离开频道"
                     tvJoin.isSelected = true
-                    rtcEngine.joinChannel("","12345","","")
+                    rtcEngine.joinChannel("","123456","","")
                 }
                 isJoinChannel = !isJoinChannel
             })
@@ -74,6 +75,11 @@ class MainActivity : AppCompatActivity() {
                })
            }
        }).start()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        ScreenShareKit.screenRotation(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE)
     }
 
 
