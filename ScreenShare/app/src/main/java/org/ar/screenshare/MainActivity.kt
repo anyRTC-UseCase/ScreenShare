@@ -77,11 +77,6 @@ class MainActivity : AppCompatActivity() {
        }).start()
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        ScreenShareKit.screenRotation(newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE)
-    }
-
 
     inner class RtcEvent:IRtcEngineEventHandler(){
         override fun onJoinChannelSuccess(channel: String?, uid: String?, elapsed: Int) {
@@ -90,6 +85,25 @@ class MainActivity : AppCompatActivity() {
                 isJoinSuccess = true
             }
         }
+
+
+        override fun onUserJoined(uid: String?, elapsed: Int) {
+            super.onUserJoined(uid, elapsed)
+        }
+
+        override fun onUserOffline(uid: String?, reason: Int) {
+            super.onUserOffline(uid, reason)
+        }
+
+        override fun onFirstRemoteVideoDecoded(
+            uid: String?,
+            width: Int,
+            height: Int,
+            elapsed: Int
+        ) {
+            super.onFirstRemoteVideoDecoded(uid, width, height, elapsed)
+        }
+
 
     }
 
