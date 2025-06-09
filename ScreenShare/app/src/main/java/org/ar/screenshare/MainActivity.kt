@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -11,6 +12,8 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.MemoryFile
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.view.TextureView
 import android.view.View
@@ -20,10 +23,14 @@ import org.ar.rtc.Constants
 import org.ar.rtc.IRtcEngineEventHandler
 import org.ar.rtc.RtcEngine
 import org.ar.rtc.VideoEncoderConfiguration
+import org.ar.rtc.VideoEncoderConfiguration.ORIENTATION_MODE
+import org.ar.rtc.VideoEncoderConfiguration.VideoDimensions
 import org.ar.rtc.video.ARVideoFrame
 import org.ar.rtc.video.VideoCanvas
 import org.ar.screenshare.databinding.ActivityMainBinding
+import org.loka.screensharekit.EncodeBuilder
 import org.loka.screensharekit.ScreenShareKit
+import org.loka.screensharekit.callback.RGBACallBack
 import java.nio.ByteBuffer
 
 class MainActivity : AppCompatActivity() {
@@ -61,20 +68,44 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun requestCapture() {
-       ScreenShareKit.init(this).onH264({ buffer, isKeyFrame, w, h, ts ->
-           if (isJoinSuccess) {
-               rtcEngine.pushExternalVideoFrame(ARVideoFrame().apply {
-                   val array = ByteArray(buffer.remaining())
-                   buffer.get(array)
-                   bufType = ARVideoFrame.BUFFER_TYPE_H264
-                   format = if (isKeyFrame){ARVideoFrame.FORMAT_VIDEO_KEY_FRAME}else{ARVideoFrame.FORMAT_VIDEO_NOR_FRAME}
-                   timeStamp = ts
-                   buf = array
-                   height = h
-                   stride = w
-               })
-           }
-       }).start()
+        ScreenShareKit.init(this).config(if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 1280 else 720 ,
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) 720 else 1280,5,1000000, EncodeBuilder.SCREEN_DATA_TYPE.RGBA,
+        ).onRGBA(object :RGBACallBack{
+            override fun onRGBA(
+                rgba: ByteArray,
+                width: Int,
+                height: Int,
+                stride: Int,
+                rotation: Int,
+                rotationChanged: Boolean
+            ) {
+
+                if (isJoinSuccess){
+                    if (rotationChanged) {
+                        val configuration = VideoEncoderConfiguration()
+                        configuration.dimensions = VideoDimensions(width, height)
+                        configuration.bitrate = 1000
+                        configuration.minBitrate = 1000
+                        configuration.minFrameRate = 1
+                        configuration.frameRate = 5
+                        configuration.orientationMode =
+                            if (rotation == 90 || rotation == 270) ORIENTATION_MODE.ORIENTATION_MODE_FIXED_LANDSCAPE else ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT
+                        rtcEngine?.setVideoEncoderConfiguration(configuration)
+                    }
+
+                    val videoFrame = ARVideoFrame()
+                    videoFrame.bufType = ARVideoFrame.BUFFER_TYPE_ARRAY
+                    videoFrame.buf = rgba
+                    videoFrame.stride = stride
+                    videoFrame.width=width
+                    videoFrame.height = height
+                    videoFrame.rotation = 0
+                    videoFrame.format = ARVideoFrame.FORMAT_RGBA
+                    rtcEngine?.pushExternalVideoFrame(videoFrame)
+                }
+            }
+
+        }).start()
     }
 
 
